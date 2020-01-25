@@ -1,0 +1,39 @@
+{
+  "Actions": [
+    {
+      "Icon": "Images/icon",
+      "Name": "Send OSC Command",
+      "States": [
+        {
+          "Image": "Images/pluginAction",
+          "TitleAlignment": "middle",
+          "FontSize": "12"
+        }
+      ],
+      "SupportedInMultiActions": false,
+      "Tooltip": "Send any OSC command",
+      "UUID": "de.shells.osc.pluginaction"
+    }
+  ],
+  "Category": "Send OSC",
+  "CategoryIcon": "Images/categoryIcon",
+  "Disabled": false,
+  "Author": "shells",
+  "CodePathWin": "de.shells.osc.exe",
+  "PropertyInspectorPath": "PropertyInspector/index.html",
+  "Description": "Send any OSC command and value to your device.",
+  "Name": "Send OSC Command",
+  "Icon": "Images/pluginIcon",
+  "URL": "https://github.com/shells-dw/streamdeck-osc",
+  "Version": "1.0.0",
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "4.3"
+  },
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ]
+}
