@@ -4,11 +4,11 @@
 
 ## What Is This (and what does it do?)
 
-It's a plugin for the [Elgato Stream Deck][Stream Deck] that sends [OpenSoundControl][] messages.
+It's a plugin for the [Elgato Stream Deck][Stream Deck] that sends basic [OpenSoundControl][] messages.
 
 ## What Is It Not (and what can't it do?)
 
-It's not a full OSC protocol implementation. Every device and software uses the protocol a bit differently and making all possible cases available in the program is probably impossible (leaving aside way too time consuming).
+It's not a full OSC protocol implementation. Every device and software uses the protocol a bit differently and making all possible cases available in the program is pr way too time consuming for me.
 
 ## Release / Installation
 
