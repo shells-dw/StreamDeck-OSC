@@ -17,14 +17,14 @@ Inside the Release-folder you can find the precompiled plugin. Download and open
 ## Usage
 ### General
 
-Enter IP and Port of your OSC device, enter the String you want to send, for example "/hardwareInput/1/volume" which depends on the system you're using. As said, every device or software uses a different structure.
-You can send an integer number and a float number with the string, if it's needed. You can also send both. Check the corresponding checkboxes to have the values send with the string arguments.
-In OSC there are a lot more options that can be required as arguments, including strings, big ints and blobs - in varying sequence. I did not implement that.
+Enter IP and Port of your OSC device, enter the message you want to send, for example "/hardwareInput/1/volume" which depends on the system you're using. As said, every device or software uses a different structure.
+You can send string, an integer number and a float number as argument with the message, if it's needed. You can send all, some or none. Check the corresponding checkboxes to have the values send as arguments.
+In OSC there are a lot more options that can be required as arguments, including multiple strings, multiple ints, big ints and blobs - in varying order. I did not implement that all.
 
 # Limitations
 
 - Windows 10 with .NET Framework is required to run this plugin.
-- Currently limited to sending strings with optional arguments integer and float (which should cover most implementations, I guess)
+- Currently limited to sending messages with optional arguments string, integer and float (which should cover most implementations, I guess)
 
 # I have an issue or miss a feature?
 
