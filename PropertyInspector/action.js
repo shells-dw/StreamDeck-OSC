@@ -29,10 +29,12 @@ function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, 
     Ip = actionInfo.payload.settings.Ip;
     Port = actionInfo.payload.settings.Port;
     Name = actionInfo.payload.settings.Name;
+    StringValue = actionInfo.payload.settings.StringValue;
     IntValue = actionInfo.payload.settings.IntValue;
     FloatValue = actionInfo.payload.settings.FloatValue;
     SendInt = actionInfo.payload.settings.SendInt;
     SendFloat = actionInfo.payload.settings.SendFloat;
+    SendString = actionInfo.payload.settings.SendString;
 }
 
 function websocketOnOpen() {
@@ -46,230 +48,268 @@ function websocketOnOpen() {
     sendValueToPlugin('propertyInspectorConnected', 'property_inspector');
 }
 
-    function websocketOnMessage(evt) {
-        // Received message from Stream Deck
-        var jsonObj = JSON.parse(evt.data);
+function websocketOnMessage(evt) {
+    // Received message from Stream Deck
+    var jsonObj = JSON.parse(evt.data);
 
-        if (jsonObj.event === 'sendToPropertyInspector') {
-            var payload = jsonObj.payload;
-            loadConfiguration(payload);
-        }
-        else if (jsonObj.event === 'didReceiveSettings') {
-            var payload = jsonObj.payload;
-            loadConfiguration(payload.settings);
-        }
-        else {
-            console.log("Unhandled websocketOnMessage: " + jsonObj.event);
-        }
+    if (jsonObj.event === 'sendToPropertyInspector') {
+        var payload = jsonObj.payload;
+        loadConfiguration(payload);
     }
+    else if (jsonObj.event === 'didReceiveSettings') {
+        var payload = jsonObj.payload;
+        loadConfiguration(payload.settings);
+    }
+    else {
+        console.log("Unhandled websocketOnMessage: " + jsonObj.event);
+    }
+}
 
-    function loadConfiguration(payload) {
-        console.log('loadConfiguration');
-        console.log(payload);
-        if (payload.payload != undefined) {
-            updateUI(payload.action, payload.payload.settings);
-        } else {
-            updateUI(actionInfo.action, payload);
-        }
+function loadConfiguration(payload) {
+    console.log('loadConfiguration');
+    console.log(payload);
+    if (payload.payload != undefined) {
+        updateUI(payload.action, payload.payload.settings);
+    } else {
+        updateUI(actionInfo.action, payload);
     }
+}
 
 function setSettings(value, param) {
-     console.log("setSettings start:");
-     console.log(actionInfo.payload.settings);
+    console.log("setSettings start:");
+    console.log(actionInfo.payload.settings);
     var payload = {};
     payload[param] = value;
-     console.log("setSettings payload:");
-     console.log(payload);
+    console.log("setSettings payload:");
+    console.log(payload);
     let settings;
     if (param === "Ip") { Ip = payload.Ip }
     if (param === "Port") { Port = payload.Port }
     if (param === "Name") { Name = payload.Name }
+    if (param === "StringValue") { StringValue = payload.StringValue }
     if (param === "IntValue") { IntValue = payload.IntValue }
     if (param === "FloatValue") { FloatValue = payload.FloatValue }
     if (param === "SendFloat") { SendFloat = payload.SendFloat }
     if (param === "SendInt") { SendInt = payload.SendInt }
-        settings = {
-            Ip: Ip,
-            Port: Port,
-            Name: Name,
-            IntValue: IntValue,
-            FloatValue: FloatValue,
-            SendInt: SendInt,
-            SendFloat: SendFloat
-        }
-    
+    if (param === "SendString") { SendString = payload.SendString }
+    settings = {
+        Ip: Ip,
+        Port: Port,
+        Name: Name,
+        StringValue: StringValue,
+        IntValue: IntValue,
+        FloatValue: FloatValue,
+        SendString: SendString,
+        SendInt: SendInt,
+        SendFloat: SendFloat
+    }
 
-     console.log("setSettings end:");
-     console.log(settings);
+
+    console.log("setSettings end:");
+    console.log(settings);
     setSettingsToPlugin(settings);
 }
-    function setSettingsToPlugin(payload) {
-        if (websocket && (websocket.readyState === 1)) {
-            const json = {
-                'event': 'setSettings',
-                'context': uuid,
-                'payload': payload
-            };
-            websocket.send(JSON.stringify(json));
-            var event = new Event('settingsUpdated');
-            document.dispatchEvent(event);
-        }
+function setSettingsToPlugin(payload) {
+    if (websocket && (websocket.readyState === 1)) {
+        const json = {
+            'event': 'setSettings',
+            'context': uuid,
+            'payload': payload
+        };
+        websocket.send(JSON.stringify(json));
+        var event = new Event('settingsUpdated');
+        document.dispatchEvent(event);
     }
+}
 
-    // Sends an entire payload to the sendToPlugin method
-    function sendPayloadToPlugin(payload) {
-        if (websocket && (websocket.readyState === 1)) {
-            const json = {
-                'action': actionInfo['action'],
-                'event': 'sendToPlugin',
-                'context': uuid,
-                'payload': payload
-            };
-            websocket.send(JSON.stringify(json));
-        }
+// Sends an entire payload to the sendToPlugin method
+function sendPayloadToPlugin(payload) {
+    if (websocket && (websocket.readyState === 1)) {
+        const json = {
+            'action': actionInfo['action'],
+            'event': 'sendToPlugin',
+            'context': uuid,
+            'payload': payload
+        };
+        websocket.send(JSON.stringify(json));
     }
+}
 
-    // Sends one value to the sendToPlugin method
-    function sendValueToPlugin(value, param) {
-        if (websocket && (websocket.readyState === 1)) {
-            const json = {
-                'action': actionInfo['action'],
-                'event': 'sendToPlugin',
-                'context': uuid,
-                'payload': {
-                    [param]: value
-                }
-            };
-            websocket.send(JSON.stringify(json));
-        }
+// Sends one value to the sendToPlugin method
+function sendValueToPlugin(value, param) {
+    if (websocket && (websocket.readyState === 1)) {
+        const json = {
+            'action': actionInfo['action'],
+            'event': 'sendToPlugin',
+            'context': uuid,
+            'payload': {
+                [param]: value
+            }
+        };
+        websocket.send(JSON.stringify(json));
     }
+}
 
-    function openWebsite() {
-        if (websocket && (websocket.readyState === 1)) {
-            const json = {
-                'event': 'openUrl',
-                'payload': {
-                    'url': 'https://BarRaider.github.io'
-                }
-            };
-            websocket.send(JSON.stringify(json));
-        }
+function openWebsite() {
+    if (websocket && (websocket.readyState === 1)) {
+        const json = {
+            'event': 'openUrl',
+            'payload': {
+                'url': 'https://BarRaider.github.io'
+            }
+        };
+        websocket.send(JSON.stringify(json));
     }
+}
 
-    if (!isQT) {
-        document.addEventListener('DOMContentLoaded', function () {
-            initPropertyInspector();
-        });
-    }
-
-    window.addEventListener('beforeunload', function (e) {
-        e.preventDefault();
-
-        // Notify the plugin we are about to leave
-        sendValueToPlugin('propertyInspectorWillDisappear', 'property_inspector');
-
-        // Don't set a returnValue to the event, otherwise Chromium with throw an error.
+if (!isQT) {
+    document.addEventListener('DOMContentLoaded', function () {
+        initPropertyInspector();
     });
+}
 
-    function initPropertyInspector() {
-        // Place to add functions
-    }
+window.addEventListener('beforeunload', function (e) {
+    e.preventDefault();
+
+    // Notify the plugin we are about to leave
+    sendValueToPlugin('propertyInspectorWillDisappear', 'property_inspector');
+
+    // Don't set a returnValue to the event, otherwise Chromium with throw an error.
+});
+
+function initPropertyInspector() {
+    // Place to add functions
+}
 
 function updateUI(pl, settings) {
     console.log("settings: ");
     console.log(settings);
-        if (pl === "de.shells.osc.pluginaction") {
-            let x = ['<div class="sdpi-item" id="required_text">',
-                '<div class="sdpi-item-label">IP-Address</div>',
-                '<input class="sdpi-item-value" id="ip" value="" placeholder="127.0.0.1" required pattern="\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}" onchange="setSettings(event.target.value, \'Ip\')">',
-                '</div>',
-                '<div class="sdpi-item" id="required_text">',
-                '<div class="sdpi-item-label">Port</div>',
-                '<input class="sdpi-item-value" id="port" value="" placeholder="7001" required pattern="\\d{1,5}" onchange="setSettings(event.target.value, \'Port\')">',
-                '</div>',
-                '<div class="sdpi-item">',
-                '    <div class="sdpi-item-label">OSC String</div>',
-                '    <input class="sdpi-item-value" id="name" value="" placeholder="" onchange="setSettings(event.target.value, \'Name\')">',
-                '</div>',
-                '<div class="sdpi-item">',
-                '    <div class="sdpi-item-label">Int Value</div>',
-                '    <input class="sdpi-item-value" id="intValue" value="" placeholder="" onchange="setSettings(event.target.value, \'IntValue\')">',
-                '</div>',
-                '<div type="checkbox" class="sdpi-item" id="single-check">',
-                '    <div class="sdpi-item-label">Send Int Value?</div>',
-                '       <div class="sdpi-item-child">',
-                '           <input class="sdpi-item-value" id="sendInt" type="checkbox" value="on" onchange="setSettings(document.getElementById(\'sendInt\').checked, \'SendInt\')">',
-                '               <label for="sendInt" class="sdpi-item-label"><span></span></label>',
-                '       </div>',
-                '</div>',
-                '<div class="sdpi-item">',
-                '    <div class="sdpi-item-label">Float Value</div>',
-                '    <input class="sdpi-item-value" id="floatValue" value="" type="number" step="any" placeholder="0.5" onchange="setSettings(event.target.value, \'FloatValue\')">',
-                '</div>',
-                '<div type="checkbox" class="sdpi-item" id="single-check">',
-                '    <div class="sdpi-item-label">Send Float Value?</div>',
-                '       <div class="sdpi-item-child">',
-                '           <input class="sdpi-item-value" id="sendFloat" type="checkbox" value="on" onchange="setSettings(document.getElementById(\'sendFloat\').checked, \'SendFloat\')">',
-                '               <label for="sendFloat" class="sdpi-item-label"><span></span></label>',
-                '       </div>',
-                '</div>',
-                '<div class="sdpi-item">',
-                '    <details class="message question">',
-                '        <summary>hint (click me)</summary>',
-                '        <h4>Information:</h4>',
-                '        <p>Enter IP and Port of your device, enter OSC Message string, for example "/test/1", Integer Value to send (if applicable) and Float Value to send (if applicable). Select the checkboxes to select if you want to send Int and Float values. This depends on how your device is specified.</p>',
-                '    </details>',
-                '</div>'].join('');
-            document.getElementById('placeholder').innerHTML = x;
-            if (settings.Ip === undefined) {
-                document.getElementById('ip').value = "";
-            } else {
-                document.getElementById('ip').value = settings.Ip;
-            }
-            if (settings.Port === undefined) {
-                document.getElementById('port').value = "";
-            } else {
-                document.getElementById('port').value = settings.Port;
-            }
-            if (settings.Name === undefined) {
-                document.getElementById('name').value = "";
-            } else {
-                document.getElementById('name').value = settings.Name;
-            }
-            if (settings.IntValue === undefined) {
-                document.getElementById('intValue').value = "";
-            } else {
-                document.getElementById('intValue').value = settings.IntValue;
-            }
-            if (settings.FloatValue === undefined) {
-                document.getElementById('floatValue').value = "";
-            } else {
-                document.getElementById('floatValue').value = settings.FloatValue;
-            }
-            if (settings.SendInt === "True") {
-                document.getElementById("sendInt").checked = true;
-            } else {
-                document.getElementById("sendInt").checked = false;
-            }
-            if (settings.SendFloat === "True") {
-                document.getElementById("sendFloat").checked = true;
-            } else {
-                document.getElementById("sendFloat").checked = false;
-            }
+    if (pl === "de.shells.osc.pluginaction") {
+        let x = ['<div class="sdpi-item" id="required_text">',
+            '<div class="sdpi-item-label">IP-Address</div>',
+            '<input class="sdpi-item-value" id="ip" value="" placeholder="127.0.0.1" required pattern="\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}" onchange="setSettings(event.target.value, \'Ip\')">',
+            '</div>',
+            '<div class="sdpi-item" id="required_text">',
+            '<div class="sdpi-item-label">Port</div>',
+            '<input class="sdpi-item-value" id="port" value="" placeholder="7001" required pattern="\\d{1,5}" onchange="setSettings(event.target.value, \'Port\')">',
+            '</div>',
+            '<div class="sdpi-item">',
+            '    <div class="sdpi-item-label">OSC Message</div>',
+            '    <input class="sdpi-item-value" id="name" value="" placeholder="" onchange="setSettings(event.target.value, \'Name\')">',
+            '</div>',
+            '<div class="sdpi-item">',
+            '    <div class="sdpi-item-label">String</div>',
+            '    <input class="sdpi-item-value" id="stringValue" value="" placeholder="" onchange="setSettings(event.target.value, \'StringValue\')">',
+            '</div>',
+            '<div type="checkbox" class="sdpi-item" id="single-check">',
+            '    <div class="sdpi-item-label">Send String?</div>',
+            '       <div class="sdpi-item-child">',
+            '           <input class="sdpi-item-value" id="sendString" type="checkbox" value="on" onchange="setSettings(document.getElementById(\'sendString\').checked, \'SendString\')">',
+            '               <label for="sendString" class="sdpi-item-label"><span></span></label>',
+            '       </div>',
+            '</div>',
+            '<div class="sdpi-item">',
+            '    <div class="sdpi-item-label">Integer/Decimal</div>',
+            '    <input class="sdpi-item-value" id="intValue" value="" placeholder="" type="number" step="any" pattern="^[0-9]*$" onchange="checkInputInt(event.target.value)">',
+            '</div>',
+            '<div type="checkbox" class="sdpi-item" id="single-check">',
+            '    <div class="sdpi-item-label">Send Int/Decimal?</div>',
+            '       <div class="sdpi-item-child">',
+            '           <input class="sdpi-item-value" id="sendInt" type="checkbox" value="on" onchange="setSettings(document.getElementById(\'sendInt\').checked, \'SendInt\')">',
+            '               <label for="sendInt" class="sdpi-item-label"><span></span></label>',
+            '       </div>',
+            '</div>',
+            '<div class="sdpi-item">',
+            '    <div class="sdpi-item-label">Float</div>',
+            '    <input class="sdpi-item-value" id="floatValue" value="" type="number" step="any" placeholder="0.5" onchange="checkInputFloat(event.target.value)">',
+            '</div>',
+            '<div type="checkbox" class="sdpi-item" id="single-check">',
+            '    <div class="sdpi-item-label">Send Float?</div>',
+            '       <div class="sdpi-item-child">',
+            '           <input class="sdpi-item-value" id="sendFloat" type="checkbox" value="on" onchange="setSettings(document.getElementById(\'sendFloat\').checked, \'SendFloat\')">',
+            '               <label for="sendFloat" class="sdpi-item-label"><span></span></label>',
+            '       </div>',
+            '</div>',
+            '<div class="sdpi-item">',
+            '    <details class="message question">',
+            '        <summary>hint (click me)</summary>',
+            '        <h4>Information:</h4>',
+            '        <p>Enter IP and Port of your device, enter OSC Message string, for example "/test/1", Integer Value to send (if applicable) and Float Value to send (if applicable). Select the checkboxes to select if you want to send Int and Float values. This depends on how your device is specified.</p>',
+            '    </details>',
+            '</div>'].join('');
+        document.getElementById('placeholder').innerHTML = x;
+        if (settings.Ip === undefined) {
+            document.getElementById('ip').value = "";
+        } else {
+            document.getElementById('ip').value = settings.Ip;
+        }
+        if (settings.Port === undefined) {
+            document.getElementById('port').value = "";
+        } else {
+            document.getElementById('port').value = settings.Port;
+        }
+        if (settings.Name === undefined) {
+            document.getElementById('name').value = "";
+        } else {
+            document.getElementById('name').value = settings.Name;
+        }
+        if (settings.StringValue === undefined) {
+            document.getElementById('stringValue').value = "";
+        } else {
+            document.getElementById('stringValue').value = settings.StringValue;
+        }
+        if (settings.IntValue === undefined) {
+            document.getElementById('intValue').value = "";
+        } else {
+            document.getElementById('intValue').value = settings.IntValue;
+        }
+        if (settings.FloatValue === undefined) {
+            document.getElementById('floatValue').value = "";
+        } else {
+            document.getElementById('floatValue').value = settings.FloatValue;
+        }
+        if (settings.SendString === "True") {
+            document.getElementById("sendString").checked = true;
+        } else {
+            document.getElementById("sendString").checked = false;
+        }
+        if (settings.SendInt === "True") {
+            document.getElementById("sendInt").checked = true;
+        } else {
+            document.getElementById("sendInt").checked = false;
+        }
+        if (settings.SendFloat === "True") {
+            document.getElementById("sendFloat").checked = true;
+        } else {
+            document.getElementById("sendFloat").checked = false;
         }
     }
+}
+function checkInputInt(rUInt) {
+    if (Number(rUInt)) {
+        setSettings(parseInt(rUInt), 'IntValue');
+    } else {
+        document.getElementById('intValue').value = "Only Integers allowed";
+    }
+}
+function checkInputFloat(rUFloat) {
+    if (Number(rUFloat)) {
+        setSettings(parseFloat(rUFloat), 'FloatValue')
+    } else {
+        document.getElementById('floatValue').value = "Only Float numbers allowed";
+    }
+}
 
+function addDynamicStyles(clrs) {
+    const node = document.getElementById('#sdpi-dynamic-styles') || document.createElement('style');
+    if (!clrs.mouseDownColor) clrs.mouseDownColor = fadeColor(clrs.highlightColor, -100);
+    const clr = clrs.highlightColor.slice(0, 7);
+    const clr1 = fadeColor(clr, 100);
+    const clr2 = fadeColor(clr, 60);
+    const metersActiveColor = fadeColor(clr, -60);
 
-    function addDynamicStyles(clrs) {
-        const node = document.getElementById('#sdpi-dynamic-styles') || document.createElement('style');
-        if (!clrs.mouseDownColor) clrs.mouseDownColor = fadeColor(clrs.highlightColor, -100);
-        const clr = clrs.highlightColor.slice(0, 7);
-        const clr1 = fadeColor(clr, 100);
-        const clr2 = fadeColor(clr, 60);
-        const metersActiveColor = fadeColor(clr, -60);
-
-        node.setAttribute('id', 'sdpi-dynamic-styles');
-        node.innerHTML = `
+    node.setAttribute('id', 'sdpi-dynamic-styles');
+    node.innerHTML = `
 
     input[type="radio"]:checked + label span,
     input[type="checkbox"]:checked + label span {
@@ -317,22 +357,22 @@ function updateUI(pl, settings) {
         background: linear-gradient(${clr}, ${clr2} 20%, ${metersActiveColor} 45%, ${metersActiveColor} 55%, ${clr})
     }
     `;
-        document.body.appendChild(node);
-    };
+    document.body.appendChild(node);
+};
 
-    /** UTILITIES */
+/** UTILITIES */
 
-    /*
-        Quick utility to lighten or darken a color (doesn't take color-drifting, etc. into account)
-        Usage:
-        fadeColor('#061261', 100); // will lighten the color
-        fadeColor('#200867'), -100); // will darken the color
-    */
-    function fadeColor(col, amt) {
-        const min = Math.min, max = Math.max;
-        const num = parseInt(col.replace(/#/g, ''), 16);
-        const r = min(255, max((num >> 16) + amt, 0));
-        const g = min(255, max((num & 0x0000FF) + amt, 0));
-        const b = min(255, max(((num >> 8) & 0x00FF) + amt, 0));
-        return '#' + (g | (b << 8) | (r << 16)).toString(16).padStart(6, 0);
-    }
+/*
+    Quick utility to lighten or darken a color (doesn't take color-drifting, etc. into account)
+    Usage:
+    fadeColor('#061261', 100); // will lighten the color
+    fadeColor('#200867'), -100); // will darken the color
+*/
+function fadeColor(col, amt) {
+    const min = Math.min, max = Math.max;
+    const num = parseInt(col.replace(/#/g, ''), 16);
+    const r = min(255, max((num >> 16) + amt, 0));
+    const g = min(255, max((num & 0x0000FF) + amt, 0));
+    const b = min(255, max(((num >> 8) & 0x00FF) + amt, 0));
+    return '#' + (g | (b << 8) | (r << 16)).toString(16).padStart(6, 0);
+}

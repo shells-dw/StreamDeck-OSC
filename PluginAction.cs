@@ -2,10 +2,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using SharpOSC;
 
@@ -21,10 +17,12 @@ namespace StreamDeck_OSC
                 PluginSettings instance = new PluginSettings
                 {
                     Name = String.Empty,
+                    StringValue = String.Empty,
                     IntValue = 0,
                     FloatValue = 0.500f,
                     Port = 7001,
                     Ip = String.Empty,
+                    SendString = "False",
                     SendInt = "False",
                     SendFloat = "False"
                 };
@@ -34,6 +32,9 @@ namespace StreamDeck_OSC
             [FilenameProperty]
             [JsonProperty(PropertyName = "Name")]
             public string Name { get; set; }
+
+            [JsonProperty(PropertyName = "StringValue")]
+            public string StringValue { get; set; }
 
             [JsonProperty(PropertyName = "IntValue")]
             public int IntValue { get; set; }
@@ -52,6 +53,9 @@ namespace StreamDeck_OSC
 
             [JsonProperty(PropertyName = "SendFloat")]
             public string SendFloat { get; set; }
+
+            [JsonProperty(PropertyName = "SendString")]
+            public string SendString { get; set; }
         }
 
         #region Private Members
@@ -79,23 +83,8 @@ namespace StreamDeck_OSC
         public override void KeyPressed(KeyPayload payload)
         {
             Logger.Instance.LogMessage(TracingLevel.INFO, "Key Pressed");
-            Logger.Instance.LogMessage(TracingLevel.INFO, "Sending OSC: Name/String: " + this.settings.Name + " | Value/Int: " + this.settings.IntValue + " | Send Int?: " + this.settings.SendInt + " | Value/Float: " + this.settings.FloatValue + " | Send Float?: " + this.settings.SendFloat + " | to IP: " + this.settings.Ip + " | to Port: " + this.settings.Port);
-            if (this.settings.SendInt == "True" && this.settings.SendFloat == "True")
-            {
-                this.SendOscCommandIntFloat(this.settings.Name, this.settings.IntValue, this.settings.FloatValue, this.settings.Ip, this.settings.Port);
-            }
-            else if (this.settings.SendInt == "True" && this.settings.SendFloat == "False")
-            {
-                this.SendOscCommandInt(this.settings.Name, this.settings.IntValue, this.settings.Ip, this.settings.Port);
-            }
-            else if (this.settings.SendInt == "False" && this.settings.SendFloat == "True")
-            {
-                this.SendOscCommandFloat(this.settings.Name, this.settings.FloatValue, this.settings.Ip, this.settings.Port);
-            }
-            else if (this.settings.SendInt == "False" && this.settings.SendFloat == "False")
-            {
-                this.SendOscCommandOnly(this.settings.Name, this.settings.Ip, this.settings.Port);
-            }
+            Logger.Instance.LogMessage(TracingLevel.INFO, "Sending OSC: Name/String: " + this.settings.Name + " | Value/String: " + this.settings.StringValue + " | Send String?: " + this.settings.SendString + " | Value/Int: " + this.settings.IntValue + " | Send Int?: " + this.settings.SendInt + " | Value/Float: " + this.settings.FloatValue + " | Send Float?: " + this.settings.SendFloat + " | to IP: " + this.settings.Ip + " | to Port: " + this.settings.Port);
+            this.SendOscCommand(this.settings.Name, this.settings.StringValue, this.settings.IntValue, this.settings.FloatValue, this.settings.Ip, this.settings.Port, this.settings.SendString, this.settings.SendInt, this.settings.SendFloat);
         }
 
         public override void KeyReleased(KeyPayload payload) { }
@@ -117,30 +106,44 @@ namespace StreamDeck_OSC
             return Connection.SetSettingsAsync(JObject.FromObject(settings));
         }
 
-        #endregion
-        public void SendOscCommandIntFloat(string name, int intValue, float floatValue, string ip, int port)
-        {
-            var message = new OscMessage(name, intValue, floatValue);
-            var sender = new UDPSender(ip, port);
-            sender.Send(message);
-        }
-        public void SendOscCommandInt(string name, int intValue, string ip, int port)
-        {
-            var message = new OscMessage(name, intValue);
-            var sender = new UDPSender(ip, port);
-            sender.Send(message);
-        }
-        public void SendOscCommandFloat(string name, float floatValue, string ip, int port)
-        {
-            var message = new OscMessage(name, floatValue);
-            var sender = new UDPSender(ip, port);
-            sender.Send(message);
-        }
-        public void SendOscCommandOnly(string name, string ip, int port)
+        public void SendOscCommand(string name, string stringValue, int intValue, float floatValue, string ip, int port, string sendString, string sendInt, string sendFloat)
         {
             var message = new OscMessage(name);
+            if (sendString == "True" && sendInt == "False" && sendFloat == "False")
+            {
+                message = new OscMessage(name, stringValue);
+            }
+            else if (sendString == "True" && sendInt == "True" && sendFloat == "False")
+            {
+                message = new OscMessage(name, stringValue, intValue);
+            }
+            else if (sendString == "True" && sendInt == "True" && sendFloat == "True")
+            {
+                message = new OscMessage(name, stringValue, intValue, floatValue);
+            }
+            else if (sendString == "False" && sendInt == "True" && sendFloat == "False")
+            {
+                message = new OscMessage(name, intValue, floatValue);
+            }
+            else if (sendString == "False" && sendInt == "False" && sendFloat == "True")
+            {
+                message = new OscMessage(name, floatValue);
+            }
+            else if (sendString == "False" && sendInt == "False" && sendFloat == "False")
+            {
+                message = new OscMessage(name);
+            }
+            else if (sendString == "True" && sendInt == "False" && sendFloat == "True")
+            {
+                message = new OscMessage(name, stringValue, floatValue);
+            }
+            else if (sendString == "False" && sendInt == "True" && sendFloat == "True")
+            {
+                message = new OscMessage(name, intValue, floatValue);
+            }
             var sender = new UDPSender(ip, port);
             sender.Send(message);
         }
+        #endregion
     }
 }
