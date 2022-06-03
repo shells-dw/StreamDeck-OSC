@@ -1,3 +1,5 @@
+ ![GitHub](https://img.shields.io/github/license/shells-dw/StreamDeck-OSC)     ![GitHub last commit](https://img.shields.io/github/last-commit/shells-dw/StreamDeck-OSC)     [![Tip](https://img.shields.io/badge/Donate-PayPal-green.svg)]( https://www.paypal.com/donate?hosted_button_id=8KXD334CCEEC2) / [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y4CE9LH)
+
 # Send OSC Commands with your StreamDeck
 
 ![Overview](/docs/O.png)
@@ -23,7 +25,7 @@ In OSC there are a lot more options that can be required as arguments, including
 
 # Limitations
 
-- Windows 10 with .NET Framework is required to run this plugin.
+- Windows 10 with .NET Framework is required to run this plugin. (Windows 11 might not run as smooth, I've heard issues with other plugins depending on .NET Framework, so keep that in mind)
 - Currently limited to sending messages with optional arguments string, integer and float (which should cover most implementations, I guess)
 
 # I have an issue or miss a feature?
