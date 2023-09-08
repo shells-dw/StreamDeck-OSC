@@ -24,9 +24,10 @@ function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, 
     var event = new Event('websocketCreate');
     document.dispatchEvent(event);
 
-    loadConfiguration(actionInfo.payload.settings);
+    console.log(actionInfo);
+    loadConfiguration(actionInfo);
 
-    Ip = actionInfo.payload.settings.Ip;
+    IP = actionInfo.payload.settings.IP;
     Port = actionInfo.payload.settings.Port;
     Name = actionInfo.payload.settings.Name;
     StringValue = actionInfo.payload.settings.StringValue;
@@ -75,6 +76,7 @@ function loadConfiguration(payload) {
     }
 }
 
+
 function setSettings(value, param) {
     console.log("setSettings start:");
     console.log(actionInfo.payload.settings);
@@ -82,33 +84,37 @@ function setSettings(value, param) {
     payload[param] = value;
     console.log("setSettings payload:");
     console.log(payload);
-    let settings;
-    if (param === "Ip") { Ip = payload.Ip }
-    if (param === "Port") { Port = payload.Port }
-    if (param === "Name") { Name = payload.Name }
-    if (param === "StringValue") { StringValue = payload.StringValue }
-    if (param === "IntValue") { IntValue = payload.IntValue }
-    if (param === "FloatValue") { FloatValue = payload.FloatValue }
-    if (param === "SendFloat") { SendFloat = payload.SendFloat }
-    if (param === "SendInt") { SendInt = payload.SendInt }
-    if (param === "SendString") { SendString = payload.SendString }
-    settings = {
-        Ip: Ip,
+
+    if (param === "IP") { IP = payload.IP; }
+    if (param === "Port") { Port = payload.Port; }
+    if (param === "Name") { Name = payload.Name; }
+    if (param === "StringValue") { StringValue = payload.StringValue; }
+    if (param === "IntValue") { IntValue = payload.IntValue; }
+    if (param === "FloatValue") { FloatValue = payload.FloatValue; }
+    if (param === "SendFloat") { SendFloat = payload.SendFloat; }
+    if (param === "SendInt") { SendInt = payload.SendInt; }
+    if (param === "SendString") { SendString = payload.SendString; }
+
+    let intValue = document.getElementById('intValue').value;
+    let floatValue = document.getElementById('floatValue').value;
+
+    let settings = {
+        IP: IP,
         Port: Port,
         Name: Name,
         StringValue: StringValue,
-        IntValue: IntValue,
-        FloatValue: FloatValue,
+        IntValue: (intValue !== null && intValue !== undefined) ? parseInt(intValue) : null,
+        FloatValue: (floatValue !== null && floatValue !== undefined) ? parseFloat(floatValue) : null,
         SendString: SendString,
         SendInt: SendInt,
         SendFloat: SendFloat
-    }
+    };
 
-
-    console.log("setSettings end:");
-    console.log(settings);
     setSettingsToPlugin(settings);
 }
+
+
+
 function setSettingsToPlugin(payload) {
     if (websocket && (websocket.readyState === 1)) {
         const json = {
@@ -122,7 +128,6 @@ function setSettingsToPlugin(payload) {
     }
 }
 
-// Sends an entire payload to the sendToPlugin method
 function sendPayloadToPlugin(payload) {
     if (websocket && (websocket.readyState === 1)) {
         const json = {
@@ -135,7 +140,6 @@ function sendPayloadToPlugin(payload) {
     }
 }
 
-// Sends one value to the sendToPlugin method
 function sendValueToPlugin(value, param) {
     if (websocket && (websocket.readyState === 1)) {
         const json = {
@@ -144,18 +148,6 @@ function sendValueToPlugin(value, param) {
             'context': uuid,
             'payload': {
                 [param]: value
-            }
-        };
-        websocket.send(JSON.stringify(json));
-    }
-}
-
-function openWebsite() {
-    if (websocket && (websocket.readyState === 1)) {
-        const json = {
-            'event': 'openUrl',
-            'payload': {
-                'url': 'https://BarRaider.github.io'
             }
         };
         websocket.send(JSON.stringify(json));
@@ -173,8 +165,6 @@ window.addEventListener('beforeunload', function (e) {
 
     // Notify the plugin we are about to leave
     sendValueToPlugin('propertyInspectorWillDisappear', 'property_inspector');
-
-    // Don't set a returnValue to the event, otherwise Chromium with throw an error.
 });
 
 function initPropertyInspector() {
@@ -184,22 +174,23 @@ function initPropertyInspector() {
 function updateUI(pl, settings) {
     console.log("settings: ");
     console.log(settings);
+    console.log("Setting IP to:", settings.IP);
     if (pl === "de.shells.osc.pluginaction") {
         let x = ['<div class="sdpi-item" id="required_text">',
             '<div class="sdpi-item-label">IP-Address</div>',
-            '<input class="sdpi-item-value" id="ip" value="" placeholder="127.0.0.1" required pattern="\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}" onchange="setSettings(event.target.value, \'Ip\')">',
+            '<input class="sdpi-item-value" id="IP" value="127.0.0.1" placeholder="127.0.0.1" required pattern="\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}" onchange="setSettings(event.target.value, \'IP\')">',
             '</div>',
             '<div class="sdpi-item" id="required_text">',
             '<div class="sdpi-item-label">Port</div>',
-            '<input class="sdpi-item-value" id="port" value="" placeholder="7001" required pattern="\\d{1,5}" onchange="setSettings(event.target.value, \'Port\')">',
+            '<input class="sdpi-item-value" id="Port" value="7001" placeholder="7001" required pattern="\\d{1,5}" onchange="setSettings(event.target.value, \'Port\')">',
             '</div>',
             '<div class="sdpi-item">',
             '    <div class="sdpi-item-label">OSC Message</div>',
-            '    <input class="sdpi-item-value" id="name" value="" placeholder="" onchange="setSettings(event.target.value, \'Name\')">',
+            '    <input class="sdpi-item-value" id="name" value="7001" placeholder="" onchange="setSettings(event.target.value, \'Name\')">',
             '</div>',
             '<div class="sdpi-item">',
             '    <div class="sdpi-item-label">String</div>',
-            '    <input class="sdpi-item-value" id="stringValue" value="" placeholder="" onchange="setSettings(event.target.value, \'StringValue\')">',
+            '    <input class="sdpi-item-value" id="stringValue" value="7001" placeholder="" onchange="setSettings(event.target.value, \'StringValue\')">',
             '</div>',
             '<div type="checkbox" class="sdpi-item" id="single-check">',
             '    <div class="sdpi-item-label">Send String?</div>',
@@ -238,60 +229,39 @@ function updateUI(pl, settings) {
             '    </details>',
             '</div>'].join('');
         document.getElementById('placeholder').innerHTML = x;
-        if (settings.Ip === undefined) {
-            document.getElementById('ip').value = "";
-        } else {
-            document.getElementById('ip').value = settings.Ip;
+
+        // Set values or defaults
+        function setValueOrDefault(elementId, value, defaultValue) {
+            document.getElementById(elementId).value = (value !== undefined && value !== null && value !== "") ? value : defaultValue;
         }
-        if (settings.Port === undefined) {
-            document.getElementById('port').value = "";
-        } else {
-            document.getElementById('port').value = settings.Port;
+
+        setValueOrDefault('IP', settings.IP, "127.0.0.1");
+        setValueOrDefault('Port', settings.Port, "7001");
+        setValueOrDefault('name', settings.Name, "");
+        setValueOrDefault('stringValue', settings.StringValue, "");
+        setValueOrDefault('intValue', settings.IntValue, "");
+        setValueOrDefault('floatValue', settings.FloatValue, "0.5");
+
+        function setCheckedOrFalse(elementId, value) {
+            document.getElementById(elementId).checked = value;
         }
-        if (settings.Name === undefined) {
-            document.getElementById('name').value = "";
-        } else {
-            document.getElementById('name').value = settings.Name;
-        }
-        if (settings.StringValue === undefined) {
-            document.getElementById('stringValue').value = "";
-        } else {
-            document.getElementById('stringValue').value = settings.StringValue;
-        }
-        if (settings.IntValue === undefined) {
-            document.getElementById('intValue').value = "";
-        } else {
-            document.getElementById('intValue').value = settings.IntValue;
-        }
-        if (settings.FloatValue === undefined) {
-            document.getElementById('floatValue').value = "";
-        } else {
-            document.getElementById('floatValue').value = settings.FloatValue;
-        }
-        if (settings.SendString === "True") {
-            document.getElementById("sendString").checked = true;
-        } else {
-            document.getElementById("sendString").checked = false;
-        }
-        if (settings.SendInt === "True") {
-            document.getElementById("sendInt").checked = true;
-        } else {
-            document.getElementById("sendInt").checked = false;
-        }
-        if (settings.SendFloat === "True") {
-            document.getElementById("sendFloat").checked = true;
-        } else {
-            document.getElementById("sendFloat").checked = false;
-        }
+
+        setCheckedOrFalse("sendString", settings.SendString);
+        setCheckedOrFalse("sendInt", settings.SendInt);
+        setCheckedOrFalse("sendFloat", settings.SendFloat);
     }
 }
+
+
 function checkInputInt(rUInt) {
-    if (Number(rUInt)) {
+    if (rUInt !== null && rUInt !== undefined && rUInt.toString().match(/^-?\d+$/)) {
         setSettings(parseInt(rUInt), 'IntValue');
     } else {
         document.getElementById('intValue').value = "Only Integers allowed";
     }
 }
+
+
 function checkInputFloat(rUFloat) {
     if (Number(rUFloat)) {
         setSettings(parseFloat(rUFloat), 'FloatValue')

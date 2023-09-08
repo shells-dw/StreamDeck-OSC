@@ -25,7 +25,7 @@
   "Name": "Send OSC Command",
   "Icon": "Images/pluginIcon",
   "URL": "https://github.com/shells-dw/streamdeck-osc",
-  "Version": "1.1.0",
+  "Version": "2.0.0",
   "SDKVersion": 2,
   "Software": {
     "MinimumVersion": "4.3"
