@@ -1,0 +1,384 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Send OSC Command</title>
+		<style>
+			:root {
+				--bg-input: #3d3d3d;
+				--bg-input-hover: #4a4a4a;
+				--text: #d8d8d8;
+				--text-dim: #969696;
+				--accent: #77f;
+				--danger: #f4796b;
+				--ok: #6ec06e;
+				--label-width: 88px;
+				--gap: 6px;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				margin: 0;
+				padding: 12px 12px 20px;
+				font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+				font-size: 9pt;
+				color: var(--text);
+				background: transparent;
+			}
+
+			.row {
+				display: flex;
+				align-items: center;
+				gap: var(--gap);
+				margin-bottom: var(--gap);
+			}
+
+			.row > label {
+				flex: 0 0 var(--label-width);
+				text-align: right;
+				color: var(--text);
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			input,
+			select,
+			button {
+				font-family: inherit;
+				font-size: inherit;
+				color: var(--text);
+				background: var(--bg-input);
+				border: none;
+				border-radius: 4px;
+				padding: 4px 6px;
+				min-width: 0;
+			}
+
+			input:focus-visible,
+			select:focus-visible,
+			button:focus-visible {
+				outline: 1px solid var(--accent);
+				outline-offset: 1px;
+			}
+
+			input {
+				flex: 1 1 auto;
+			}
+
+			input::placeholder {
+				color: var(--text-dim);
+			}
+
+			button {
+				cursor: pointer;
+			}
+
+			button:hover {
+				background: var(--bg-input-hover);
+			}
+
+			/* Argument list ------------------------------------------------- */
+
+			.args {
+				margin-top: 14px;
+				border-top: 1px solid #454545;
+				padding-top: 10px;
+			}
+
+			.args-head {
+				display: flex;
+				align-items: baseline;
+				justify-content: space-between;
+				margin-bottom: 8px;
+			}
+
+			.args-head h2 {
+				margin: 0;
+				font-size: 9pt;
+				font-weight: 600;
+			}
+
+			.tags {
+				font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+				color: var(--text-dim);
+			}
+
+			.arg {
+				display: grid;
+				grid-template-columns: 16px 1fr 1fr 22px;
+				gap: var(--gap);
+				align-items: center;
+				margin-bottom: var(--gap);
+			}
+
+			.arg.dragging {
+				opacity: 0.4;
+			}
+
+			.arg.drop-target {
+				box-shadow: 0 -2px 0 var(--accent);
+			}
+
+			.handle {
+				cursor: grab;
+				color: var(--text-dim);
+				text-align: center;
+				user-select: none;
+				line-height: 1;
+			}
+
+			.arg .note {
+				color: var(--text-dim);
+				align-self: center;
+				padding-left: 2px;
+			}
+
+			.remove {
+				padding: 4px 0;
+				text-align: center;
+				background: transparent;
+				color: var(--text-dim);
+			}
+
+			.remove:hover {
+				background: var(--bg-input-hover);
+				color: var(--danger);
+			}
+
+			.error {
+				grid-column: 3 / 5;
+				color: var(--danger);
+				margin: -2px 0 4px;
+			}
+
+			.empty {
+				color: var(--text-dim);
+				margin-bottom: 8px;
+			}
+
+			.actions {
+				display: flex;
+				gap: var(--gap);
+				align-items: center;
+				margin-top: 10px;
+			}
+
+			.result {
+				flex: 1 1 auto;
+				text-align: right;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.result.ok {
+				color: var(--ok);
+			}
+
+			.result.bad {
+				color: var(--danger);
+			}
+
+			.section {
+				margin-top: 14px;
+				border-top: 1px solid #454545;
+				padding-top: 10px;
+			}
+
+			.section > h2 {
+				margin: 0 0 8px;
+				font-size: 9pt;
+				font-weight: 600;
+			}
+
+			.section[data-disabled="true"] .row:not(.toggle) {
+				opacity: 0.4;
+				pointer-events: none;
+			}
+
+			.row.toggle > label {
+				flex: 0 0 var(--label-width);
+			}
+
+			.row.toggle input[type="checkbox"] {
+				flex: 0 0 auto;
+				margin: 0;
+				accent-color: var(--accent);
+			}
+
+			.row .hint {
+				color: var(--text-dim);
+				flex: 1 1 auto;
+			}
+
+			details {
+				margin-top: 16px;
+				color: var(--text-dim);
+			}
+
+			summary {
+				cursor: pointer;
+			}
+
+			details p {
+				margin: 8px 0 0;
+				line-height: 1.5;
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				* {
+					transition: none !important;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="row">
+			<label for="host">IP address</label>
+			<input id="host" type="text" placeholder="127.0.0.1" spellcheck="false" autocomplete="off" />
+		</div>
+		<div class="row">
+			<label for="port">Port</label>
+			<input id="port" type="number" min="1" max="65535" step="1" placeholder="7001" />
+		</div>
+		<div class="row">
+			<label for="address">OSC address</label>
+			<input id="address" type="text" placeholder="/volume/1" spellcheck="false" autocomplete="off" />
+		</div>
+		<div class="row" id="address-error-row" hidden>
+			<label></label>
+			<span class="error" id="address-error"></span>
+		</div>
+
+		<div class="args">
+			<div class="args-head">
+				<h2>Arguments</h2>
+				<span class="tags" id="tags"></span>
+			</div>
+			<p class="empty" id="empty">No arguments. The message is sent with an address only.</p>
+			<div id="arg-list"></div>
+			<div class="actions">
+				<button id="add" type="button">Add argument</button>
+				<button id="test" type="button">Send test</button>
+				<span class="result" id="result"></span>
+			</div>
+		</div>
+
+		<div class="section" id="dial-section">
+			<h2>Stream Deck + dial</h2>
+			<div class="row">
+				<label for="dial-arg">Dial drives</label>
+				<select id="dial-arg"></select>
+			</div>
+			<div class="row">
+				<label for="dial-min">Range</label>
+				<input id="dial-min" type="number" step="any" placeholder="0" />
+				<input id="dial-max" type="number" step="any" placeholder="1" />
+			</div>
+			<div class="row">
+				<label for="dial-step">Step per tick</label>
+				<input id="dial-step" type="number" step="any" min="0" placeholder="0.01" />
+			</div>
+			<div class="row">
+				<label for="dial-press">Press sets</label>
+				<input id="dial-press" type="number" step="any" placeholder="leave empty to send as configured" />
+			</div>
+		</div>
+
+		<div class="section" id="watch-section" data-disabled="true">
+			<h2>Show incoming values</h2>
+			<div class="row toggle">
+				<label for="watch-enabled">Listen</label>
+				<input id="watch-enabled" type="checkbox" />
+				<span class="hint">Display values your device sends back</span>
+			</div>
+			<div class="row">
+				<label for="watch-port">Listen on port</label>
+				<input id="watch-port" type="number" min="1" max="65535" placeholder="9001" />
+			</div>
+			<div class="row">
+				<label for="watch-address">Watch address</label>
+				<input id="watch-address" type="text" spellcheck="false" autocomplete="off" placeholder="same as the address above" />
+			</div>
+			<div class="row">
+				<label for="watch-arg">Show argument</label>
+				<input id="watch-arg" type="number" min="0" step="1" placeholder="0" />
+				<label for="watch-decimals" style="flex:0 0 auto">decimals</label>
+				<input id="watch-decimals" type="number" min="0" max="6" step="1" placeholder="2" />
+			</div>
+		</div>
+
+		<div class="section" id="keepalive-section" data-disabled="true">
+			<h2>Keep-alive</h2>
+			<div class="row toggle">
+				<label for="keepalive-enabled">Send</label>
+				<input id="keepalive-enabled" type="checkbox" />
+				<span class="hint">Only if your device needs a subscription</span>
+			</div>
+			<div class="row">
+				<label for="keepalive-address">Address</label>
+				<input id="keepalive-address" type="text" spellcheck="false" autocomplete="off" placeholder="/xremote" />
+			</div>
+			<div class="row">
+				<label for="keepalive-seconds">Every</label>
+				<input id="keepalive-seconds" type="number" min="1" max="600" step="1" placeholder="9" />
+				<span class="hint">seconds</span>
+			</div>
+		</div>
+
+		<div class="section" id="defaults-section">
+			<h2>Defaults for new buttons</h2>
+			<div class="row">
+				<label for="default-ip">IP address</label>
+				<input id="default-ip" type="text" spellcheck="false" autocomplete="off" placeholder="127.0.0.1" />
+			</div>
+			<div class="row">
+				<label for="default-port">Port</label>
+				<input id="default-port" type="number" min="1" max="65535" placeholder="7001" />
+			</div>
+			<div class="row">
+				<label for="default-address">OSC address</label>
+				<input id="default-address" type="text" spellcheck="false" autocomplete="off" placeholder="/" />
+			</div>
+			<div class="row">
+				<label></label>
+				<span class="hint" id="defaults-note">Applies to buttons you add from now on. Existing buttons keep their settings.</span>
+			</div>
+		</div>
+
+		<details>
+			<summary>About argument types</summary>
+			<p>
+				Integer, float, string and blob are the four types every OSC device is required to understand. The
+				others are optional in the specification — a device is allowed to ignore a message that uses one. If a
+				message has no effect, try expressing it with the required types first.
+			</p>
+			<p>
+				True, false, nil, infinitum and the array brackets carry no value; they occupy a slot in the type tag
+				string only.
+			</p>
+		</details>
+
+		<details>
+			<summary>About receiving values</summary>
+			<p>
+				OSC has no request and response: nothing comes back because you sent something. Your device has to be
+				configured to transmit to this computer's IP address, on the port set above. The first time the plugin
+				listens, your firewall will most likely ask permission.
+			</p>
+			<p>
+				Some equipment stays silent until it is asked to report. A Behringer X32, for example, sends nothing
+				until it receives <code>/xremote</code>, and stops again after about ten seconds — that is what the
+				keep-alive is for. Unity, Unreal and TouchOSC need nothing; they transmit as soon as you configure them
+				to.
+			</p>
+		</details>
+
+		<script src="pi.js"></script>
+	</body>
+</html>
