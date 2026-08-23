@@ -1,0 +1,61 @@
+{
+	"$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+	"UUID": "de.shells.osc",
+	"Name": "Send OSC Command",
+	"Version": "3.2.0.0",
+	"Author": "shells",
+	"Description": "Send OpenSoundControl messages to any device or application on your network.",
+	"Category": "Send OSC Command",
+	"CategoryIcon": "imgs/categoryIcon",
+	"Icon": "imgs/pluginIcon",
+	"URL": "https://github.com/shells-dw/streamdeck-osc",
+	"CodePath": "bin/plugin.js",
+	"PropertyInspectorPath": "ui/send-osc.html",
+	"Nodejs": {
+		"Version": "20"
+	},
+	"SDKVersion": 3,
+	"Software": {
+		"MinimumVersion": "6.9"
+	},
+	"OS": [
+		{
+			"Platform": "windows",
+			"MinimumVersion": "10"
+		},
+		{
+			"Platform": "mac",
+			"MinimumVersion": "10.15"
+		}
+	],
+	"Actions": [
+		{
+			"UUID": "de.shells.osc.pluginaction",
+			"Name": "Send OSC Command",
+			"Icon": "imgs/icon",
+			"Tooltip": "Send an OSC message when this key is pressed",
+			"Controllers": [
+				"Keypad",
+				"Encoder"
+			],
+			"SupportedInMultiActions": true,
+			"States": [
+				{
+					"Image": "imgs/pluginAction",
+					"TitleAlignment": "middle",
+					"FontSize": 12
+				}
+			],
+			"Encoder": {
+				"layout": "$B1",
+				"StackColor": "#FFC24B",
+				"TriggerDescription": {
+					"Rotate": "Adjust value",
+					"Push": "Send / reset",
+					"Touch": "Send",
+					"LongTouch": "Send"
+				}
+			}
+		}
+	]
+}
